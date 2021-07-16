@@ -1,0 +1,1 @@
+export const WALLET_FINANCE_SERVICE = "wallet-finance-service";
