@@ -1,5 +1,5 @@
 import { Kafka, KafkaConfig, Consumer as KafkaConsumer, Producer as KafkaProducer, ProducerConfig } from "kafkajs";
-import { WALLET_API_SERVICE } from "./constants";
+import { WALLET_FINANCE_SERVICE } from "./constants";
 import config from "../src/config";
 
 export class KafkaService {
