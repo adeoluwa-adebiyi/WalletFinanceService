@@ -20,7 +20,7 @@ import app from "./app";
 
 const processWalletFundEvents = async ()=>{
     const kafkaService = await KafkaService.getInstance();
-    await kafkaService.consumer.subscribe({ topic: topics.WALLET_CREDIT_FUNDS_REQUEST_TOPIC, });
+    await kafkaService.consumer.subscribe({ topic: topics.WALLET_MONEY_EVENT_TOPIC, });
 
     await kafkaService.consumer.run({
         autoCommit:true,
@@ -34,6 +34,6 @@ const processWalletFundEvents = async ()=>{
 
 
 connect().then(async connection => {
-    processWalletFundEvents();
+    // processWalletFundEvents();
     app.listen(config.PORT);
 });
