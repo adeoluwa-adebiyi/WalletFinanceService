@@ -8,6 +8,8 @@ export interface Message{
 
     data: any;
 
+    key?: String
+
     getVersion(): string;
 
     getKey(): string;

@@ -1,4 +1,12 @@
 import { model } from "mongoose";
-import currencySchema from "../schemas/currency";
+import accountSchema from "../schemas/account";
 
-export default model("currency", currencySchema);
+export interface Account{
+    id: String;
+    userId: String;
+    walletId: String;
+    balance: Number;
+    description: String;
+}
+
+export default model("account", accountSchema);

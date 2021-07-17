@@ -1,22 +1,30 @@
 import { Schema } from "mongoose";
+import * as uuid from "uuid";
 
-const currencySchema = new Schema({
+const accountSchema = new Schema({
     id: {
         type: String,
-        required: [true, "Currency id is required"],
-        unique: true
+        unique: true,
+        default: uuid.v4()
     },
-    symbol: {
+    userId:{
         type: String,
-        required: [true, "Currency symbol is required"],
+        required: [true, "userId is required"]
+    },
+    walletId: {
+        type: String,
+        required: [true, "walletId is required"]
+    },
+    balance: {
+        type: Number,
+        default: 0.00
     },
     description: {
-        type: String,
-        required: false
+        type: String
     }
 
 },{
     timestamps: true
 });
 
-export default currencySchema;
+export default accountSchema;
