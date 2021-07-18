@@ -3,9 +3,14 @@ import accountModel from "../db/models/account";
 
 export interface AccountRepo{
     getAccount(walletId: String): Promise<Account>;
+    updateAccount(account: Account): Promise<Account>;
 }
 
 export class AccountRepoImpl implements AccountRepo{
+    
+    async updateAccount(account: Account): Promise<Account> {
+        return await accountModel.findOneAndUpdate({walletId: account.walletId}, {...account});
+    }
 
     async getAccount(walletId: String): Promise<Account> {
         try{
@@ -19,4 +24,8 @@ export class AccountRepoImpl implements AccountRepo{
         }
     }
 
+    async
+
 }
+
+export default new AccountRepoImpl();

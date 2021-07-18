@@ -7,7 +7,7 @@ import { WalletCreditMessage } from "./processors/messages/WalletCreditMessage";
 import { connect } from "./db/connection";
 import app from "./app";
 import { Message } from "./processors/messages/interface/message";
-import accountService from "../services/account";
+import accountService from "./services/account";
 import { WALLET_CREDIT } from "./message_types";
 import { matchMessage } from "./helpers/messages";
 import { AccountService } from "./services/account";

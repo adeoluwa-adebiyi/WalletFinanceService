@@ -5,6 +5,7 @@ import { connect as mongoConnect } from "mongoose";
 
 export const connect = async()=>{
 
+    console.log(config.DB_URL);
     return new Promise<void>((resolve, reject) =>mongoConnect(config.DB_URL,{
         autoIndex:true
     }, (err)=>{

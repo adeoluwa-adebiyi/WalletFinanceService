@@ -9,4 +9,4 @@ export interface Account{
     description: String;
 }
 
-export default model("account", accountSchema);
+export default model<Account>("account", accountSchema);

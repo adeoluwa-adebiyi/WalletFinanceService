@@ -4,6 +4,6 @@ import { userAuthenticated, userSessionMiddleware } from "../midddlewares/userSe
 
 const router: Router = Router();
 
-router.get("/balance/walletId", [userSessionMiddleware, userAuthenticated], accountController.paymentInitController);
+router.get("/balance/:walletId", [userSessionMiddleware, userAuthenticated], accountController.getAccountBalance);
 
 export default router;

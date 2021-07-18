@@ -1,7 +1,6 @@
 import { USER_DOES_NOT_EXIST_ERROR, USER_TOKEN_EXPIRED_ERROR } from "../common/errors";
 import config from "../config";
 import { verify, decode } from "jsonwebtoken";
-import walletCreditRequest from "../db/models/walletCreditRequest";
 
 export const authorize = (jwt:string) => {
     const token = verify(jwt, config.APP_SECRET);
