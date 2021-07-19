@@ -21,6 +21,7 @@ const processWalletMoneyEvents = async ()=>{
         autoCommit:true,
         eachBatch: async(payload: EachBatchPayload) => {
             for (let message of payload.batch.messages){
+                console.log(message);
                 matchMessage(WALLET_CREDIT, message.value.toString(), new WalletCreditMessage(), handleWalletCreditMessage);
             }
         }
