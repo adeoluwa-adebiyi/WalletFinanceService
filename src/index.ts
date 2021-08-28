@@ -15,7 +15,8 @@ import { WalletCreatedMessage } from "./processors/messages/account-created-msg"
 
 
 const processWalletMoneyEvents = async ()=>{
-    const kafkaService = await KafkaService.getInstance();
+    const WALLET_MONEY_EVENTS_GROUP = `${WALLET_FINANCE_SERVICE}-wallet-money-events`;
+    const kafkaService = await KafkaService.getInstance(WALLET_MONEY_EVENTS_GROUP);
     await kafkaService.consumer.subscribe({ topic: topics.WALLET_MONEY_EVENT_TOPIC, });
 
     await kafkaService.consumer.run({
@@ -30,7 +31,8 @@ const processWalletMoneyEvents = async ()=>{
 }
 
 const processWalletStateEvents = async ()=>{
-    const kafkaService = await KafkaService.getInstance();
+    const WALLET_STATE_EVENTS_GROUP = `${WALLET_FINANCE_SERVICE}-wallet-state-events`
+    const kafkaService = await KafkaService.getInstance(WALLET_STATE_EVENTS_GROUP);
     await kafkaService.consumer.subscribe({ topic: topics.WALLET_STATE_EVENT_TOPIC, });
 
     await kafkaService.consumer.run({
@@ -58,6 +60,6 @@ const handleWalletCreatedMessage = async(message: WalletCreatedMessage) => {
 
 connect().then(async connection => {
     processWalletMoneyEvents();
-    // processWalletStateEvents();
+    processWalletStateEvents();
     app.listen(config.PORT);
 });

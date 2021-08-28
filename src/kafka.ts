@@ -18,25 +18,40 @@ export class KafkaService {
         this.kafkaProducer = null;
     }
 
-    static async getInstance(): Promise<KafkaService>{
-        if(!this.INSTANCE){
-            this.INSTANCE = new KafkaService();
-            this.INSTANCE.kafkaClient = new Kafka(<KafkaConfig>{
-                // clientId: WALLET_API_SERVICE,
-                brokers: [
-                    config.KAFKA_BOOTSTRAP_SERVER
-                ]
-             });
-            this.INSTANCE.kafkaConsumer = this.INSTANCE.kafkaClient.consumer({
-                groupId: WALLET_FINANCE_SERVICE
-            });
-            this.INSTANCE.kafkaProducer = this.INSTANCE.kafkaClient.producer(<ProducerConfig>{
+    static async getInstance(consumerId=WALLET_FINANCE_SERVICE): Promise<KafkaService>{
+        // if(!this.INSTANCE){
+        //     this.INSTANCE = new KafkaService();
+        //     this.INSTANCE.kafkaClient = new Kafka(<KafkaConfig>{
+        //         // clientId: WALLET_API_SERVICE,
+        //         brokers: [
+        //             config.KAFKA_BOOTSTRAP_SERVER
+        //         ]
+        //      });
+        //     this.INSTANCE.kafkaConsumer = this.INSTANCE.kafkaClient.consumer({
+        //         groupId: WALLET_FINANCE_SERVICE
+        //     });
+        //     this.INSTANCE.kafkaProducer = this.INSTANCE.kafkaClient.producer(<ProducerConfig>{
                 
-            });
-            await this.INSTANCE.kafkaConsumer.connect();
-            await this.INSTANCE.kafkaProducer.connect();
-        }
-        return this.INSTANCE;
+        //     });
+        //     await this.INSTANCE.kafkaConsumer.connect();
+        //     await this.INSTANCE.kafkaProducer.connect();
+        // }
+        const instance = new KafkaService();
+        instance.kafkaClient = new Kafka(<KafkaConfig>{
+            // clientId: WALLET_API_SERVICE,
+            brokers: [
+                config.KAFKA_BOOTSTRAP_SERVER
+            ]
+         });
+        instance.kafkaConsumer = instance.kafkaClient.consumer({
+            groupId: consumerId
+        });
+        instance.kafkaProducer = instance.kafkaClient.producer(<ProducerConfig>{
+            
+        });
+        await instance.kafkaConsumer.connect();
+        await instance.kafkaProducer.connect();
+        return instance;
     }
 
     get consumer(): KafkaConsumer{

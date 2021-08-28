@@ -1,0 +1,4 @@
+APP_SECRET=mC51FshIdGDafgPuxnfXGLrzzlccbZKK
+DB_URL=mongodb://localhost:27117/wallet_finance_service_db
+PORT=8002
+KAFKA_BOOTSTRAP_SERVER=localhost:29092
