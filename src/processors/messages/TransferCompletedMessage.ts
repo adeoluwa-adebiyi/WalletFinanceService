@@ -1,22 +1,31 @@
 import { Message } from "./interface/message";
 
-export class WalletCreditMessage implements Message{
+export interface TransferCompletedMessageParams{
+    transferRequestId: String;
+}
+
+export class TransferCompletedMessage implements Message, TransferCompletedMessageParams {
+    key?: String;
     entityId: String;
     version: String = "1";
-    name: String = "credit";
+    name: String = "transfer-completed";
     data: any;
 
-    amount: Number;
-    currency: String;
-    walletId: String;
-    userId: String;
+    transferRequestId: String;
+
+    constructor(params?: TransferCompletedMessageParams) {
+        if (params) {
+            this.transferRequestId = params.transferRequestId;
+        }
+    }
+
 
     getVersion(): string {
         return this.version.toString();
     }
 
     getKey(): string {
-        return this.userId.toString();
+        return "";
     }
 
     serialize(): string {
@@ -24,11 +33,8 @@ export class WalletCreditMessage implements Message{
             entityId: this.entityId,
             version: this.version,
             name: this.name,
-            data:{
-                amount: this.amount,
-                currency: this.currency,
-                walletId: this.walletId,
-                userId: this.userId
+            data: {
+                transferRequestId: this.transferRequestId,
             }
         })
     }
@@ -38,10 +44,7 @@ export class WalletCreditMessage implements Message{
         const data: any = object.data;
         this.version = data.version;
         this.name = object.name;
-        this.amount = data.amount;
-        this.currency = data.currency;
-        this.walletId = data.walletId;
-        this.userId = data.userId;
+        this.transferRequestId = data.transferRequestId;
         return this;
     }
 }

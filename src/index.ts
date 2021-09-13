@@ -10,9 +10,13 @@ import { Message } from "./processors/messages/interface/message";
 import accountService from "./services/account";
 import { WALLET_CREATED, WALLET_CREDIT } from "./message_types";
 import { matchMessage } from "./helpers/messages";
+import TransferService, { TransferRequestMessage } from "./services/transferService";
 import { AccountService } from "./services/account";
 import { WalletCreatedMessage } from "./processors/messages/account-created-msg";
+import { WalletTransferMoneyMessage } from "./processors/messages/wallet-transfer-money-message";
+import { TransferCompletedMessage } from "./processors/messages/TransferCompletedMessage";
 
+export const WALLET_TRANSFER_REQUEST_MSG = "wallet-transfer-money-message";
 
 const processWalletMoneyEvents = async ()=>{
     const WALLET_MONEY_EVENTS_GROUP = `${WALLET_FINANCE_SERVICE}-wallet-money-events`;
@@ -46,6 +50,33 @@ const processWalletStateEvents = async ()=>{
     })
 }
 
+const TRANSFER_COMPLETED_MSG = "transfer-completed";
+const processTransferRequestMessage = async ()=>{
+    const WALLET_STATE_EVENTS_GROUP = `${WALLET_FINANCE_SERVICE}-trx-events`
+    const kafkaService = await KafkaService.getInstance(WALLET_STATE_EVENTS_GROUP);
+    await kafkaService.consumer.subscribe({ topic: topics.WALLET_TRX_EVENTS_TOPIC, });
+
+    await kafkaService.consumer.run({
+        autoCommit:true,
+        eachBatch: async(payload: EachBatchPayload) => {
+            for (let message of payload.batch.messages){
+                console.log(message);
+                matchMessage(WALLET_TRANSFER_REQUEST_MSG, message.value.toString(), new WalletTransferMoneyMessage(), handleWalletTransferRequestMessage);
+                matchMessage(TRANSFER_COMPLETED_MSG, message.value.toString(), new TransferCompletedMessage(), handleTransferCompletedEvent);
+            }
+        }
+    });
+}
+
+const handleWalletTransferRequestMessage = async(message: TransferRequestMessage) => {
+    TransferService.processTransferRequestMessage(message);
+}
+
+const handleTransferCompletedEvent = async(message: TransferCompletedMessage) => {
+    console.log("TRANS_COMPLETED");
+    TransferService.processTransferCompletedMessage(message);
+}
+
 export interface MessageHandler{
     (message: Message): any;
 }
@@ -61,5 +92,6 @@ const handleWalletCreatedMessage = async(message: WalletCreatedMessage) => {
 connect().then(async connection => {
     processWalletMoneyEvents();
     processWalletStateEvents();
+    processTransferRequestMessage();
     app.listen(config.PORT);
 });

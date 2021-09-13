@@ -15,23 +15,21 @@ export class AccountRepoImpl implements AccountRepo{
     async updateAccount(account: Account): Promise<Account> {
         const acc = await this.getAccount(account.walletId);
         acc.balance = account.balance;
-        return await accountModel.findOneAndUpdate(acc);
+        const { _id,id, ...fields } = acc;
+        return await accountModel.findOneAndUpdate({id},{...fields});
     }
 
-    async getAccount(walletId: String): Promise<Account> {
+    async getAccount(walletId: String): Promise<any> {
         try{
-            const account: Account = await accountModel.findOne({walletId});
+            const account = await accountModel.findOne({walletId});
             if(!account){
                 throw Error("wallet account does not exist");
             }
-            console.log("FETCHED_WALLET_ID: "+account.walletId);
             return account;
         }catch(e){
             throw Error("failed to fetch account");
         }
     }
-
-    async
 
 }
 

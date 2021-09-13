@@ -4,7 +4,9 @@ import {
     ConsumerSubscribeTopic, 
     ConsumerRunConfig, 
     EachMessagePayload, 
-    EachBatchPayload } from "kafkajs";
+    EachBatchPayload, 
+    KafkaMessage} from "kafkajs";
+import { KafkaService } from "../kafka";
 import { Message } from "../processors/messages/interface/message";
 
 export interface MessageHandler {
@@ -15,9 +17,7 @@ export interface MessageBatchHandler {
     ({ messages: Array, commitMessageBatch: Function }): Promise<void>;
 }
 
-export interface KafkaMessageMetaData {
-    partition: string;
-    topic: string;
+export interface KafkaMessageMetaData extends KafkaMessage {
 }
 
 export type IEventBusMetaData = KafkaMessageMetaData | { topic: string };
@@ -37,8 +37,9 @@ export class KafkaJSEventBus implements IEventBus<KafkaMessageMetaData>, IEventB
 
     private consumer: KafkaConsumer;
 
-    constructor(client: KafkaProducer) {
+    constructor(client: KafkaProducer, consumer: KafkaConsumer) {
         this.producer = client;
+        this.consumer = consumer;
     }
 
     async handleMessageBatch(topic: string, messageHandler: MessageBatchHandler): Promise<void> {
@@ -83,3 +84,14 @@ export class KafkaJSEventBus implements IEventBus<KafkaMessageMetaData>, IEventB
     }
 
 }
+
+let eventBus:IEventBus<IEventBusMetaData>;
+
+const eventBusInitializer = async()=>{
+    const kafka = await KafkaService.getInstance();
+    eventBus = new KafkaJSEventBus(kafka.producer, kafka.consumer);
+    return eventBus;
+}
+
+
+export default eventBusInitializer();

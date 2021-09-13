@@ -7,6 +7,7 @@ export interface Account{
     walletId: String;
     balance: Number;
     description: String;
+    createdAt?: any;
 }
 
 export default model<Account>("account", accountSchema);
