@@ -15,8 +15,10 @@ import { AccountService } from "./services/account";
 import { WalletCreatedMessage } from "./processors/messages/account-created-msg";
 import { WalletTransferMoneyMessage } from "./processors/messages/wallet-transfer-money-message";
 import { TransferCompletedMessage } from "./processors/messages/TransferCompletedMessage";
+import { BankPayoutMessage } from "./processors/messages/bank-payout-msg";
 
 export const WALLET_TRANSFER_REQUEST_MSG = "wallet-transfer-money-message";
+export const BANK_TRANSFER_REQUEST_MSG = "bank-payout";
 
 const processWalletMoneyEvents = async ()=>{
     const WALLET_MONEY_EVENTS_GROUP = `${WALLET_FINANCE_SERVICE}-wallet-money-events`;
@@ -61,14 +63,15 @@ const processTransferRequestMessage = async ()=>{
         eachBatch: async(payload: EachBatchPayload) => {
             for (let message of payload.batch.messages){
                 console.log(message);
-                matchMessage(WALLET_TRANSFER_REQUEST_MSG, message.value.toString(), new WalletTransferMoneyMessage(), handleWalletTransferRequestMessage);
+                matchMessage(WALLET_TRANSFER_REQUEST_MSG, message.value.toString(), new WalletTransferMoneyMessage(), handleTransferRequestMessage);
+                matchMessage(BANK_TRANSFER_REQUEST_MSG, message.value.toString(), new BankPayoutMessage(), handleTransferRequestMessage);
                 matchMessage(TRANSFER_COMPLETED_MSG, message.value.toString(), new TransferCompletedMessage(), handleTransferCompletedEvent);
             }
         }
     });
 }
 
-const handleWalletTransferRequestMessage = async(message: TransferRequestMessage) => {
+const handleTransferRequestMessage = async(message: TransferRequestMessage) => {
     TransferService.processTransferRequestMessage(message);
 }
 

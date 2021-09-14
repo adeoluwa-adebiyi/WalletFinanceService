@@ -7,12 +7,14 @@ import { Account } from "../db/models/account";
 import transferRequestVerficationRepo from "../repos/transfer-request-verfication-repo";
 import { TransferVerificationParams } from "../db/models/transferRequestVerification";
 import { TransferCompletedMessage } from "../processors/messages/TransferCompletedMessage";
+import { BankPayoutMessage, BankPayoutParams } from "../processors/messages/bank-payout-msg";
 
 export type TransferRequestMessage =  WalletTransferMoneyMessage;
 
 export interface TransferService{
     processTransferRequestMessage(message: TransferRequestMessage): Promise<void>;
     verifyWalletTransferRequest(request: WalletTransferRequest): Promise<any>;
+    verifyBankTransferRequest(request: BankPayoutParams): Promise<any>;
     processTransferCompletedMessage(message: TransferCompletedMessage): Promise<void>;
 }
 
@@ -25,6 +27,18 @@ const AccountBalanceSatifiedCheck = (account: Account, trxValue: number) => {
 }
 
 class TransferServiceImpl implements TransferService{
+
+    async verifyBankTransferRequest(request: BankPayoutParams): Promise<any> {
+        const { requestId, amount } = request;
+        const account = await AccountRepo.getAccount(request.sourceWalletId);
+        const satisfied = AccountBalanceSatifiedCheck(account, parseFloat(amount.toFixed()));
+        transferRequestVerficationRepo.createTransferRequestVerificationParams(<TransferVerificationParams>{
+                transferRequestId: requestId,
+                type:"bank-transfer",
+                approved: satisfied,
+                transferData: request
+        });
+    }
 
     async processTransferCompletedMessage(message: TransferCompletedMessage): Promise<void> {
         const { transferRequestId } = message;
@@ -65,6 +79,20 @@ class TransferServiceImpl implements TransferService{
                 currency: message.currency,
                 requestId: message.requestId,
                 amount: message.amount
+            });
+            await this.verifyWalletTransferRequest(transfer);
+        }
+
+        if(message instanceof BankPayoutMessage){
+            const transfer = await transferRequestRepoImpl.createBankTransferRequest(<BankPayoutParams>{
+                currency: message.currency,
+                requestId: message.requestId,
+                amount: message.amount,
+                bankId: message.bankId,
+                sourceWalletId: message.sourceWalletId,
+                destinationAccount: message.destinationAccount,
+                description: message.description,
+                country: message.country
             });
             await this.verifyWalletTransferRequest(transfer);
         }
