@@ -76,7 +76,6 @@ const handleTransferRequestMessage = async(message: TransferRequestMessage) => {
 }
 
 const handleTransferCompletedEvent = async(message: TransferCompletedMessage) => {
-    console.log("TRANS_COMPLETED");
     TransferService.processTransferCompletedMessage(message);
 }
 

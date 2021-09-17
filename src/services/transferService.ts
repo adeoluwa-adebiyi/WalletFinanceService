@@ -84,6 +84,7 @@ class TransferServiceImpl implements TransferService{
         }
 
         if(message instanceof BankPayoutMessage){
+            console.log(`DEBUG: ${{...message}}`);
             const transfer = await transferRequestRepoImpl.createBankTransferRequest(<BankPayoutParams>{
                 currency: message.currency,
                 requestId: message.requestId,
@@ -94,7 +95,7 @@ class TransferServiceImpl implements TransferService{
                 description: message.description,
                 country: message.country
             });
-            await this.verifyWalletTransferRequest(transfer);
+            await this.verifyBankTransferRequest(transfer);
         }
     }
 

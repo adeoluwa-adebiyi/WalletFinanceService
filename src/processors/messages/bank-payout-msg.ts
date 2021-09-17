@@ -6,6 +6,7 @@ export interface BankPayoutParams {
     bankId: String;
     swiftCode?: String;
     country?: String;
+    acctName?: String;
     amount: number;
     sourceWalletId: String;
     destinationAccount: String;
@@ -14,6 +15,8 @@ export interface BankPayoutParams {
 }
 
 export const BANK_PAYOUT_MSG = "bank-payout";
+export const FULFILL_BANK_PAYOUT_MSG = "fulfill-bank-payout";
+
 
 export class BankPayoutMessage implements Message, BankPayoutParams {
     entityId: string;
@@ -31,6 +34,7 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
     country: String;
     description: String;
     currency: String;
+    acctName?: String;
 
     constructor(params?: BankPayoutParams) {
         this.requestId = params?.requestId;
@@ -39,7 +43,8 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
         this.status = params?.status;
         this.bankId = params?.bankId;
         this.swiftCode = params?.swiftCode;
-        this.amount = params.amount;
+        this.amount = params?.amount;
+        this.acctName = params?.acctName;
         this.destinationAccount = params?.destinationAccount;
         this.sourceWalletId = params?.sourceWalletId;
         this.country = params?.country;
@@ -66,12 +71,13 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
                 status: this?.status,
                 bankId: this?.bankId,
                 swiftCode: this?.swiftCode,
+                acctName: this?.acctName,
                 destinationAccount: this?.destinationAccount,
                 description: this?.description,
                 sourceWalletId: this?.sourceWalletId,
                 country: this?.country
             }
-        })
+        });
     }
 
     deserialize(json: string): BankPayoutMessage {
@@ -84,6 +90,7 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
         this.swiftCode = data?.swiftCode;
         this.amount = data.amount;
         this.destinationAccount = data?.destinationAccount;
+        this.acctName = data?.acctName;
         this.sourceWalletId = data?.sourceWalletId;
         this.description = data?.description;
         this.currency = data.currency;
@@ -91,4 +98,13 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
         return this;
     }
 
+}
+
+export class FulfillBankPayoutMessage extends BankPayoutMessage{
+
+    name: String = FULFILL_BANK_PAYOUT_MSG;
+
+    constructor(params?: BankPayoutParams){
+        super(params);
+    }
 }
