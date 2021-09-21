@@ -7,14 +7,29 @@ import accountRepo from "../repos/account";
 
 export const WALLET_TRX_EVENTS_TOPIC = "public.wallet.trx";
 
+
+export interface AccountBalanceResponse{
+    walletId: String;
+    balance: Number;
+}
+
 export interface AccountService{
     processCreditAccount(walletId: String, amount: Number): Promise<void>;
     processDebitAccount(walletId: String, amount: Number): Promise<void>;
     processWalletCreated(walletId: String, userId: String): Promise<void>;
+    getAccountBalance(walletId: String, userId: String): Promise<AccountBalanceResponse>;
 
 }
 
 export class AccountServiceImpl implements AccountService{
+
+    async getAccountBalance(walletId: String, userId: String): Promise<AccountBalanceResponse> {
+        const account:Account = await accountRepo.getUserAccount(walletId, userId);
+        return <AccountBalanceResponse>{
+            walletId,
+            balance: account.balance
+        }
+    }
 
     async processWalletCreated(walletId: String, userId: String): Promise<void> {
         await accountRepo.createAccount({
