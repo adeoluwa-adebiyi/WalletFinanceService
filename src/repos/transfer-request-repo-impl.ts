@@ -1,7 +1,6 @@
 import { Document } from "mongoose";
-import { WalletTransferRequest } from "../../../WalletTransferService/src/models/walletTransfer";
 import Transfer from "../db/models/transfer";
-import walletTransfer from "../db/models/walletTransfer";
+import walletTransfer, { WalletTransferRequest } from "../db/models/walletTransfer";
 import bankTransfer from "../db/models/bankTransfer";
 import { BankPayoutParams } from "../processors/messages/bank-payout-msg";
 import { WalletTransferMoneyMessageParams } from "../processors/messages/wallet-transfer-money-message";

@@ -1,7 +1,7 @@
 import { Document } from "mongoose";
-import { WalletTransferRequest } from "../../../../WalletTransferService/src/models/walletTransfer";
-import { WalletTransferMoneyMessageParams } from "../../../../WalletTransferService/src/processors/messages/wallet-transfer-money-message";
+import { WalletTransferRequest } from "../../db/models/walletTransfer";
 import { BankPayoutParams } from "../../processors/messages/bank-payout-msg";
+import { WalletTransferMoneyMessageParams } from "../../processors/messages/wallet-transfer-money-message";
 
 
 export class TransferDocument extends Document<WalletTransferMoneyMessageParams> implements WalletTransferMoneyMessageParams{
