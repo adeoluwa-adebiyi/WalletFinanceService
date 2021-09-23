@@ -4,18 +4,22 @@ import transferRequestRepoImpl, { TransferRequestRepo } from "../repos/transfer-
 import walletTransfer from "../db/schemas/walletTransfer";
 import AccountRepo from "../repos/account";
 import { Account } from "../db/models/account";
+import * as mongoose from "mongoose";
 import transferRequestVerficationRepo from "../repos/transfer-request-verfication-repo";
 import { TransferVerificationParams } from "../db/models/transferRequestVerification";
 import { TransferCompletedMessage } from "../processors/messages/TransferCompletedMessage";
-import { BankPayoutMessage, BankPayoutParams } from "../processors/messages/bank-payout-msg";
+import { BankPayoutMessage, BankPayoutParams, FulfillBankPayoutMessage } from "../processors/messages/bank-payout-msg";
+import { ReservationParams } from "../db/models/reservation";
+import reservationRepoImpl from "../repos/reservation-repo-impl";
 
-export type TransferRequestMessage =  WalletTransferMoneyMessage;
+export type TransferRequestMessage = WalletTransferMoneyMessage;
 
-export interface TransferService{
+export interface TransferService {
     processTransferRequestMessage(message: TransferRequestMessage): Promise<void>;
     verifyWalletTransferRequest(request: WalletTransferRequest): Promise<any>;
     verifyBankTransferRequest(request: BankPayoutParams): Promise<any>;
     processTransferCompletedMessage(message: TransferCompletedMessage): Promise<void>;
+    handleFulfillBankPayoutMessage(message: FulfillBankPayoutMessage): Promise<void>;
 }
 
 const AccountBalanceSatifiedCheck = (account: Account, trxValue: number) => {
@@ -26,36 +30,108 @@ const AccountBalanceSatifiedCheck = (account: Account, trxValue: number) => {
     return constraintSatisfied;
 }
 
-class TransferServiceImpl implements TransferService{
+class TransferServiceImpl implements TransferService {
+
+
+    async handleFulfillBankPayoutMessage(message: FulfillBankPayoutMessage): Promise<void> {
+        const session = await mongoose.startSession();
+        await session.withTransaction(async()=>{
+            const requestId = message.requestId;
+            const amount = message.amount;
+            const account = await AccountRepo.getAccount(message.sourceWalletId);
+            await reservationRepoImpl.createReservation(<ReservationParams>{
+                type: "transfer",
+                transactionRequestId: requestId,
+                amount
+            });
+            account.balance = account.balance - parseFloat(amount.toString());
+            await AccountRepo.updateAccount(account);
+        });
+        session.endSession();
+    }
 
     async verifyBankTransferRequest(request: BankPayoutParams): Promise<any> {
         const { requestId, amount } = request;
         const account = await AccountRepo.getAccount(request.sourceWalletId);
         const satisfied = AccountBalanceSatifiedCheck(account, parseFloat(amount.toFixed()));
-        transferRequestVerficationRepo.createTransferRequestVerificationParams(<TransferVerificationParams>{
+        const session = await mongoose.startSession();
+        await session.withTransaction(async () => {
+            // if(satisfied){
+            //     await reservationRepoImpl.createReservation(<ReservationParams>{
+            //         type:"transfer",
+            //         transactionRequestId: requestId,
+            //         amount
+            //     });
+            //     account.balance = account.balance - parseFloat(amount.toString());
+            //     await AccountRepo.updateAccount(account);
+            // }
+            await transferRequestVerficationRepo.createTransferRequestVerificationParams(<TransferVerificationParams>{
                 transferRequestId: requestId,
-                type:"bank-transfer",
+                type: "bank-transfer",
                 approved: satisfied,
                 transferData: request
+            });
         });
+        session.endSession();
+    }
+
+    async transferFromSourceToDestinationWallet(request: any): Promise<void> {
+        // const session = await mongoose.startSession();
+        // await session.withTransaction(async () => {
+
+            const sourceAccount = await AccountRepo.getAccount(request.sourceWalletId);
+            sourceAccount.balance = parseFloat(sourceAccount.balance.toFixed()) - request.amount;
+            await AccountRepo.updateAccount(sourceAccount);
+
+            const destinationAcct = await AccountRepo.getAccount(request.destinationWalletId);
+            destinationAcct.balance = parseFloat(destinationAcct.balance.toFixed()) + request.amount;
+            console.log("DEST_ACCT:");
+            console.log(await AccountRepo.updateAccount(destinationAcct));
+
+            request.status = "success";
+            await request.save();
+
+        // })
+        // session.endSession();
+    }
+
+    async handleBankTransferCompletion(request: any): Promise<void> {
+        const reservation = await reservationRepoImpl.getReservation({ 
+            type: "transfer", 
+            transactionRequestId: request.requestId 
+        });
+        reservation.fulfilled = true;
+        await reservationRepoImpl.save(reservation);
+        request.status = "success";
+        await request.save();
     }
 
     async processTransferCompletedMessage(message: TransferCompletedMessage): Promise<void> {
         const { transferRequestId } = message;
         const request = await transferRequestRepoImpl.getTransferRequest(transferRequestId);
-        if(request.status !== "success" && request.status !== "failure"){
-            const account = await AccountRepo.getAccount(request.sourceWalletId);
-            if(request.destinationWalletId){
-                const destinationAcct = await AccountRepo.getAccount(request.destinationWalletId);
-                destinationAcct.balance = parseFloat(destinationAcct.balance.toFixed()) + request.amount;
-                await AccountRepo.updateAccount(destinationAcct);
+        if (request.status !== "success" && request.status !== "failure") {
+
+            if (request.destinationWalletId) {
+                await this.transferFromSourceToDestinationWallet(request);
             }
-            account.balance = parseFloat(account.balance.toFixed()) - request.amount;
-            await AccountRepo.updateAccount(account);
-            request.status = "success";
-            await request.save();
-        }else{
+
+            if (request.destinationAccount) {
+                await this.handleBankTransferCompletion(request);
+            }
+
+        } else {
             throw Error("Duplicate TransferCompleted message");
+        }
+
+        if (request.status === "failure") {
+            const session = await mongoose.startSession();
+            await session.withTransaction(async () => {
+                const sourceAccount = await AccountRepo.getAccount(request.sourceWalletId);
+                sourceAccount.balance = parseFloat(sourceAccount.balance.toFixed()) + request.amount;
+                const reservation = await reservationRepoImpl.getReservation({ type: "transfer", transactionRequestId: request.requestId });
+                reservation.fulfilled = true;
+            })
+            session.endSession();
         }
     }
 
@@ -63,16 +139,29 @@ class TransferServiceImpl implements TransferService{
         const { requestId, amount } = request;
         const account = await AccountRepo.getAccount(request.sourceWalletId);
         const satisfied = AccountBalanceSatifiedCheck(account, parseFloat(amount.toFixed()));
-        transferRequestVerficationRepo.createTransferRequestVerificationParams(<TransferVerificationParams>{
+        const session = await mongoose.startSession();
+        session.withTransaction(async () => {
+            // if(satisfied){
+            //     await reservationRepoImpl.createReservation(<ReservationParams>{
+            //         type:"transfer",
+            //         transactionRequestId: requestId,
+            //         amount
+            //     });
+            //     account.balance = account.balance - parseFloat(amount.toString());
+            //     await AccountRepo.updateAccount(account);
+            // }
+            await transferRequestVerficationRepo.createTransferRequestVerificationParams(<TransferVerificationParams>{
                 transferRequestId: requestId,
-                type:"wallet-transfer",
+                type: "wallet-transfer",
                 approved: satisfied,
                 transferData: request
+            });
         });
+        session.endSession();
     }
 
     async processTransferRequestMessage(message: TransferRequestMessage): Promise<void> {
-        if(message instanceof WalletTransferMoneyMessage){
+        if (message instanceof WalletTransferMoneyMessage) {
             const transfer = await transferRequestRepoImpl.createWalletTransferRequest(<WalletTransferRequest>{
                 sourceWalletId: message.sourceWalletId,
                 destinationWalletId: message.destinationWalletId,
@@ -83,8 +172,8 @@ class TransferServiceImpl implements TransferService{
             await this.verifyWalletTransferRequest(transfer);
         }
 
-        if(message instanceof BankPayoutMessage){
-            console.log(`DEBUG: ${{...message}}`);
+        if (message instanceof BankPayoutMessage) {
+            console.log(`DEBUG: ${{ ...message }}`);
             const transfer = await transferRequestRepoImpl.createBankTransferRequest(<BankPayoutParams>{
                 currency: message.currency,
                 requestId: message.requestId,

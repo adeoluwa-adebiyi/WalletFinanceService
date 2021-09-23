@@ -15,7 +15,7 @@ import { AccountService } from "./services/account";
 import { WalletCreatedMessage } from "./processors/messages/account-created-msg";
 import { WalletTransferMoneyMessage } from "./processors/messages/wallet-transfer-money-message";
 import { TransferCompletedMessage } from "./processors/messages/TransferCompletedMessage";
-import { BankPayoutMessage } from "./processors/messages/bank-payout-msg";
+import { BankPayoutMessage, FulfillBankPayoutMessage, FULFILL_BANK_PAYOUT_MSG } from "./processors/messages/bank-payout-msg";
 
 export const WALLET_TRANSFER_REQUEST_MSG = "wallet-transfer-money-message";
 export const BANK_TRANSFER_REQUEST_MSG = "bank-payout";
@@ -63,6 +63,7 @@ const processTransferRequestMessage = async ()=>{
         eachBatch: async(payload: EachBatchPayload) => {
             for (let message of payload.batch.messages){
                 console.log(message);
+                matchMessage(FULFILL_BANK_PAYOUT_MSG, message.value.toString(), new FulfillBankPayoutMessage(), handleFulfillBankPayoutMessage);
                 matchMessage(WALLET_TRANSFER_REQUEST_MSG, message.value.toString(), new WalletTransferMoneyMessage(), handleTransferRequestMessage);
                 matchMessage(BANK_TRANSFER_REQUEST_MSG, message.value.toString(), new BankPayoutMessage(), handleTransferRequestMessage);
                 matchMessage(TRANSFER_COMPLETED_MSG, message.value.toString(), new TransferCompletedMessage(), handleTransferCompletedEvent);
@@ -71,12 +72,28 @@ const processTransferRequestMessage = async ()=>{
     });
 }
 
+const handleFulfillBankPayoutMessage = async(message: FulfillBankPayoutMessage) => {
+    try{
+        TransferService.handleFulfillBankPayoutMessage(message);
+    }catch(e){
+        
+    }
+}
+
 const handleTransferRequestMessage = async(message: TransferRequestMessage) => {
-    TransferService.processTransferRequestMessage(message);
+    try{
+        TransferService.processTransferRequestMessage(message);
+    }catch(e){
+        
+    }
 }
 
 const handleTransferCompletedEvent = async(message: TransferCompletedMessage) => {
-    TransferService.processTransferCompletedMessage(message);
+    try{
+        TransferService.processTransferCompletedMessage(message);
+    }catch(e){
+
+    }
 }
 
 export interface MessageHandler{
@@ -84,11 +101,19 @@ export interface MessageHandler{
 }
 
 const handleWalletCreditMessage = async(message: WalletCreditMessage) => {
-    accountService.processCreditAccount(message.walletId, message.amount)
+    try{
+        accountService.processCreditAccount(message.walletId, message.amount)
+    }catch(e){
+
+    }
 }
 
 const handleWalletCreatedMessage = async(message: WalletCreatedMessage) => {
-    accountService.processWalletCreated(message.walletId, message.userId);
+    try{
+        accountService.processWalletCreated(message.walletId, message.userId);
+    }catch(e){
+
+    }
 }
 
 connect().then(async connection => {
