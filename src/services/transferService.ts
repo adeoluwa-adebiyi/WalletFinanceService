@@ -34,20 +34,24 @@ class TransferServiceImpl implements TransferService {
 
 
     async handleFulfillBankPayoutMessage(message: FulfillBankPayoutMessage): Promise<void> {
-        const session = await mongoose.startSession();
-        await session.withTransaction(async()=>{
-            const requestId = message.requestId;
-            const amount = message.amount;
-            const account = await AccountRepo.getAccount(message.sourceWalletId);
-            await reservationRepoImpl.createReservation(<ReservationParams>{
-                type: "transfer",
-                transactionRequestId: requestId,
-                amount
+        try{
+            const session = await mongoose.startSession();
+            await session.withTransaction(async()=>{
+                const requestId = message.requestId;
+                const amount = message.amount;
+                const account = await AccountRepo.getAccount(message.sourceWalletId);
+                await reservationRepoImpl.createReservation(<ReservationParams>{
+                    type: "transfer",
+                    transactionRequestId: requestId,
+                    amount
+                });
+                account.balance = account.balance - parseFloat(amount.toString());
+                await AccountRepo.updateAccount(account);
             });
-            account.balance = account.balance - parseFloat(amount.toString());
-            await AccountRepo.updateAccount(account);
-        });
-        session.endSession();
+            session.endSession();
+        }catch(e){
+            console.log(e);
+        }
     }
 
     async verifyBankTransferRequest(request: BankPayoutParams): Promise<any> {
@@ -69,7 +73,8 @@ class TransferServiceImpl implements TransferService {
                 transferRequestId: requestId,
                 type: "bank-transfer",
                 approved: satisfied,
-                transferData: request
+                transferData: request,
+                key: request.key
             });
         });
         session.endSession();
@@ -154,7 +159,8 @@ class TransferServiceImpl implements TransferService {
                 transferRequestId: requestId,
                 type: "wallet-transfer",
                 approved: satisfied,
-                transferData: request
+                transferData: request,
+                key: account.userId
             });
         });
         session.endSession();
@@ -167,7 +173,8 @@ class TransferServiceImpl implements TransferService {
                 destinationWalletId: message.destinationWalletId,
                 currency: message.currency,
                 requestId: message.requestId,
-                amount: message.amount
+                amount: message.amount,
+                key: message.key.toString()
             });
             await this.verifyWalletTransferRequest(transfer);
         }
@@ -182,7 +189,8 @@ class TransferServiceImpl implements TransferService {
                 sourceWalletId: message.sourceWalletId,
                 destinationAccount: message.destinationAccount,
                 description: message.description,
-                country: message.country
+                country: message.country,
+                key: message.key.toString()
             });
             await this.verifyBankTransferRequest(transfer);
         }

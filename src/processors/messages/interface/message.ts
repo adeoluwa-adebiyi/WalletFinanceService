@@ -12,7 +12,9 @@ export interface Message{
 
     getVersion(): string;
 
-    getKey(): string;
+    getKey(): String;
+
+    setKey(key: any): void;
 
     serialize(): string;
 

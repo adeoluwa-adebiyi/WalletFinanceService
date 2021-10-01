@@ -1,6 +1,7 @@
 import { Message } from "./interface/message";
 
 export class WalletCreditMessage implements Message{
+    key?: String;
     entityId: String;
     version: String = "1";
     name: String = "credit";
@@ -15,8 +16,12 @@ export class WalletCreditMessage implements Message{
         return this.version.toString();
     }
 
-    getKey(): string {
-        return this.userId.toString();
+    setKey(key: String): void {
+        this.key = key;
+    }
+
+    getKey(): String {
+        return this.key;
     }
 
     serialize(): string {
@@ -29,8 +34,9 @@ export class WalletCreditMessage implements Message{
                 currency: this.currency,
                 walletId: this.walletId,
                 userId: this.userId
-            }
-        })
+            },
+            key: this.key
+        });
     }
 
     deserialize(json: string): Message {
@@ -42,6 +48,7 @@ export class WalletCreditMessage implements Message{
         this.currency = data.currency;
         this.walletId = data.walletId;
         this.userId = data.userId;
+        this.key = object.key;
         return this;
     }
 }

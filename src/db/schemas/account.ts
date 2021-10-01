@@ -5,6 +5,7 @@ import { sendMessage } from "../../helpers/messaging";
 import { UserAccountBalance } from "../../processors/messages/UserAccountBalance";
 import { WALLET_TRX_EVENTS_TOPIC } from "../../services/account";
 import { Account } from "../models/account";
+import key from "./key";
 
 const accountSchema = new Schema({
     id: {

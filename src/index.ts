@@ -30,7 +30,7 @@ const processWalletMoneyEvents = async ()=>{
         eachBatch: async(payload: EachBatchPayload) => {
             for (let message of payload.batch.messages){
                 console.log(message);
-                matchMessage(WALLET_CREDIT, message.value.toString(), new WalletCreditMessage(), handleWalletCreditMessage);
+                matchMessage(WALLET_CREDIT, message.value.toString(), new WalletCreditMessage(), handleWalletCreditMessage, message.key);
             }
         }
     })
@@ -46,7 +46,7 @@ const processWalletStateEvents = async ()=>{
         eachBatch: async(payload: EachBatchPayload) => {
             for (let message of payload.batch.messages){
                 console.log(message);
-                matchMessage(WALLET_CREATED, message.value.toString(), new WalletCreditMessage(), handleWalletCreatedMessage);
+                matchMessage(WALLET_CREATED, message.value.toString(), new WalletCreditMessage(), handleWalletCreatedMessage, message.key);
             }
         }
     })
@@ -62,11 +62,15 @@ const processTransferRequestMessage = async ()=>{
         autoCommit:true,
         eachBatch: async(payload: EachBatchPayload) => {
             for (let message of payload.batch.messages){
-                console.log(message);
-                matchMessage(FULFILL_BANK_PAYOUT_MSG, message.value.toString(), new FulfillBankPayoutMessage(), handleFulfillBankPayoutMessage);
-                matchMessage(WALLET_TRANSFER_REQUEST_MSG, message.value.toString(), new WalletTransferMoneyMessage(), handleTransferRequestMessage);
-                matchMessage(BANK_TRANSFER_REQUEST_MSG, message.value.toString(), new BankPayoutMessage(), handleTransferRequestMessage);
-                matchMessage(TRANSFER_COMPLETED_MSG, message.value.toString(), new TransferCompletedMessage(), handleTransferCompletedEvent);
+                try{
+                    console.log(message);
+                    matchMessage(FULFILL_BANK_PAYOUT_MSG, message.value.toString(), new FulfillBankPayoutMessage(), handleFulfillBankPayoutMessage, message.key.toString());
+                    matchMessage(WALLET_TRANSFER_REQUEST_MSG, message.value.toString(), new WalletTransferMoneyMessage(), handleTransferRequestMessage,  message.key.toString());
+                    matchMessage(BANK_TRANSFER_REQUEST_MSG, message.value.toString(), new BankPayoutMessage(), handleTransferRequestMessage,  message.key.toString());
+                    matchMessage(TRANSFER_COMPLETED_MSG, message.value.toString(), new TransferCompletedMessage(), handleTransferCompletedEvent,  message.key.toString());
+                }catch(e){
+                    console.log(e);
+                }
             }
         }
     });

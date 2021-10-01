@@ -6,6 +6,7 @@ export interface TransferVerificationParams{
     approved: Boolean;
     type: TransferType;
     transferData: any;
+    key?: String;
 }
 
 export default model<TransferVerificationParams>("transferVerificationSchema", transferVerificationSchema);

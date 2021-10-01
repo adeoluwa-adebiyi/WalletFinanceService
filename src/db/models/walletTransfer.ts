@@ -7,6 +7,7 @@ export interface WalletTransferRequest{
     amount: Number;
     currency?:String;
     requestId?: String;
+    key?: String;
 }
 
 export default Transfer.discriminator("WalletTransfer",walletTransferSchema);

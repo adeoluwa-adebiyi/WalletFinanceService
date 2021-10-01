@@ -3,6 +3,7 @@ import eventBus from "../../bus/event-bus";
 import { sendMessage } from "../../helpers/messaging";
 import { BankPayoutMessage } from "../../processors/messages/bank-payout-msg";
 import { WALLET_TRX_EVENTS_TOPIC } from "../../topics";
+import key from "./key";
 
 const bankTransferSchema = new Schema({
     sourceWalletId: {

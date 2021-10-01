@@ -12,6 +12,7 @@ export interface BankPayoutParams {
     destinationAccount: String;
     description: String;
     currency: String;
+    key?:String;
 }
 
 export const BANK_PAYOUT_MSG = "bank-payout";
@@ -35,6 +36,7 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
     description: String;
     currency: String;
     acctName?: String;
+    key?: String;
 
     constructor(params?: BankPayoutParams) {
         this.requestId = params?.requestId;
@@ -55,8 +57,8 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
         return this.version;
     }
 
-    getKey(): string {
-        throw new Error("Method not implemented.");
+    getKey(): String {
+        return this.key;
     }
 
     serialize(): string {
@@ -76,8 +78,13 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
                 description: this?.description,
                 sourceWalletId: this?.sourceWalletId,
                 country: this?.country
-            }
+            },
+            key: this.key
         });
+    }
+
+    setKey(key: String){
+        this.key = key;
     }
 
     deserialize(json: string): BankPayoutMessage {
@@ -95,6 +102,7 @@ export class BankPayoutMessage implements Message, BankPayoutParams {
         this.description = data?.description;
         this.currency = data.currency;
         this.country = data.country;
+        this.key = obj.key;
         return this;
     }
 

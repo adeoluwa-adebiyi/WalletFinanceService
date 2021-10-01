@@ -1,7 +1,9 @@
 import { Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
+import key from "./key";
 
 const transferSchema = new Schema({
+    ...key,
     amount: {
         type: Number,
         required: [true, "walletId cannot be empty"]

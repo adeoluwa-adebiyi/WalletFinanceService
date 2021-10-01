@@ -18,14 +18,16 @@ export class TransferCompletedMessage implements Message, TransferCompletedMessa
             this.transferRequestId = params.transferRequestId;
         }
     }
-
+    setKey(key: String): void {
+        this.key = key;
+    }
 
     getVersion(): string {
         return this.version.toString();
     }
 
-    getKey(): string {
-        return "";
+    getKey(): String {
+        return this.key;
     }
 
     serialize(): string {
@@ -35,7 +37,8 @@ export class TransferCompletedMessage implements Message, TransferCompletedMessa
             name: this.name,
             data: {
                 transferRequestId: this.transferRequestId,
-            }
+            },
+            key: this.key
         })
     }
 
@@ -45,6 +48,7 @@ export class TransferCompletedMessage implements Message, TransferCompletedMessa
         this.version = data.version;
         this.name = object.name;
         this.transferRequestId = data.transferRequestId;
+        this.key = object.key;
         return this;
     }
 }

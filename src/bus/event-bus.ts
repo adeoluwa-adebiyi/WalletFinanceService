@@ -1,11 +1,12 @@
-import { 
-    Producer as KafkaProducer, 
-    Consumer as KafkaConsumer, 
-    ConsumerSubscribeTopic, 
-    ConsumerRunConfig, 
-    EachMessagePayload, 
-    EachBatchPayload, 
-    KafkaMessage} from "kafkajs";
+import {
+    Producer as KafkaProducer,
+    Consumer as KafkaConsumer,
+    ConsumerSubscribeTopic,
+    ConsumerRunConfig,
+    EachMessagePayload,
+    EachBatchPayload,
+    KafkaMessage
+} from "kafkajs";
 import { KafkaService } from "../kafka";
 import { Message } from "../processors/messages/interface/message";
 
@@ -24,14 +25,14 @@ export type IEventBusMetaData = KafkaMessageMetaData | { topic: string };
 
 export interface IEventBus<MetaData> {
     submitRequest(message: Message, topic: string): Promise<void>;
-    handleMessage(topic: string, messageHandler: MessageHandler,  metadata: MetaData): Promise<void>;
+    handleMessage(topic: string, messageHandler: MessageHandler, metadata: MetaData): Promise<void>;
 }
 
 export interface IEventBusBatchHandler {
     handleMessageBatch(topic: string, messageHandler: MessageBatchHandler): Promise<void>;
 }
 
-export class KafkaJSEventBus implements IEventBus<KafkaMessageMetaData>, IEventBusBatchHandler{
+export class KafkaJSEventBus implements IEventBus<KafkaMessageMetaData>, IEventBusBatchHandler {
 
     private producer: KafkaProducer;
 
@@ -48,8 +49,8 @@ export class KafkaJSEventBus implements IEventBus<KafkaMessageMetaData>, IEventB
         });
 
         await this.consumer.run(<ConsumerRunConfig>{
-            autoCommit:false,
-            eachBatch: async(payload: EachBatchPayload) => {
+            autoCommit: false,
+            eachBatch: async (payload: EachBatchPayload) => {
                 await messageHandler({
                     messages: payload.batch.messages,
                     commitMessageBatch: payload.resolveOffset
@@ -64,7 +65,7 @@ export class KafkaJSEventBus implements IEventBus<KafkaMessageMetaData>, IEventB
         });
         await this.consumer.run(<ConsumerRunConfig>{
             autoCommit: true,
-            eachMessage: async(payload:EachMessagePayload) => {
+            eachMessage: async (payload: EachMessagePayload) => {
                 await messageHandler({
                     message: payload.message,
                 });
@@ -77,6 +78,9 @@ export class KafkaJSEventBus implements IEventBus<KafkaMessageMetaData>, IEventB
             topic,
             messages: [
                 {
+                    ...{ 
+                        key: message?.getKey().toString() ?? null 
+                    },
                     value: message.serialize()
                 }
             ]
@@ -85,9 +89,9 @@ export class KafkaJSEventBus implements IEventBus<KafkaMessageMetaData>, IEventB
 
 }
 
-let eventBus:IEventBus<IEventBusMetaData>;
+let eventBus: IEventBus<IEventBusMetaData>;
 
-const eventBusInitializer = async()=>{
+const eventBusInitializer = async () => {
     const kafka = await KafkaService.getInstance();
     eventBus = new KafkaJSEventBus(kafka.producer, kafka.consumer);
     return eventBus;

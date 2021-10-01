@@ -16,6 +16,7 @@ export class WalletCreatedMessage implements Message{
     userId: String;
     walletId: String;
     currency: String;
+    key?: String;
 
     constructor(params?: WalletCreatedMessageParams){
         this.walletId = params?.walletId;
@@ -26,9 +27,15 @@ export class WalletCreatedMessage implements Message{
     getVersion(): string {
         throw new Error("Method not implemented.");
     }
+
     getKey(): string {
         throw new Error("Method not implemented.");
     }
+
+    setKey(key: String){
+        this.key = key;
+    }
+    
     serialize(): string {
         return JSON.stringify({
             entityId: this.entityId,
@@ -38,7 +45,8 @@ export class WalletCreatedMessage implements Message{
                 userId: this.userId,
                 walletId: this.walletId,
                 currency: this.currency
-            }
+            },
+            key: this.key
         })
     }
     deserialize(json: string): Message {
@@ -49,6 +57,7 @@ export class WalletCreatedMessage implements Message{
         this.userId = data.userId;
         this.walletId = data.walletId;
         this.currency = data.currency;
+        this.key = obj.key;
         return this;
     }
 

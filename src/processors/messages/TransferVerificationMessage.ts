@@ -22,15 +22,16 @@ export class TransferVerificationMessage implements Message, TransferVerificatio
             this.transferData = params.transferData;
         }
     }
-
+    setKey(key: String): void {
+        this.key = key;
+    }
 
     getVersion(): string {
         return this.version.toString();
     }
 
-    getKey(): string {
-        return "";
-        // return this.userId.toString();
+    getKey(): String {
+        return this.key;
     }
 
     serialize(): string {
@@ -43,7 +44,8 @@ export class TransferVerificationMessage implements Message, TransferVerificatio
                 approved: this.approved,
                 type: this.type,
                 transferData: this.transferData
-            }
+            },
+            key: this.key
         })
     }
 
@@ -56,6 +58,7 @@ export class TransferVerificationMessage implements Message, TransferVerificatio
         this.approved = data.approved;
         this.type = data.type;
         this.transferData = data.transferData;
+        this.key = object.key;
         return this;
     }
 }
