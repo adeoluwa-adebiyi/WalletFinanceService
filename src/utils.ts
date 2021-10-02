@@ -9,3 +9,10 @@ export const createMessage = <T extends Message,KeyType>(
     message.setKey(key);
     return message;
 }
+
+export const calculateSkipAndLimit = (page: Number, limit:Number =1): {skip:number, limit: number} =>{
+    return page.valueOf() < 1 ? {
+        skip: 1*limit.valueOf(),limit: limit.valueOf()} : {
+            skip:(page.valueOf()-1) * limit.valueOf(), limit: limit.valueOf()
+        };
+}

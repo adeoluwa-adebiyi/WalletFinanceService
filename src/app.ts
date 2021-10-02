@@ -20,6 +20,8 @@ app.use(cookieParser());
 
 app.use("/account", BaseRoutes.accountRoutes);
 
+app.use("/transactions", BaseRoutes.transactionsRoutes);
+
 app.use(helmet());
 
 export default app;

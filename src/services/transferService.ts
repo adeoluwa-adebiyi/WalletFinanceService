@@ -11,6 +11,7 @@ import { TransferCompletedMessage } from "../processors/messages/TransferComplet
 import { BankPayoutMessage, BankPayoutParams, FulfillBankPayoutMessage } from "../processors/messages/bank-payout-msg";
 import { ReservationParams } from "../db/models/reservation";
 import reservationRepoImpl from "../repos/reservation-repo-impl";
+import { PagedData } from "../repos/interfaces/transfer-request-repo";
 
 export type TransferRequestMessage = WalletTransferMoneyMessage;
 
@@ -20,6 +21,7 @@ export interface TransferService {
     verifyBankTransferRequest(request: BankPayoutParams): Promise<any>;
     processTransferCompletedMessage(message: TransferCompletedMessage): Promise<void>;
     handleFulfillBankPayoutMessage(message: FulfillBankPayoutMessage): Promise<void>;
+    getUserInfows(userId: Number, page: Number): Promise<PagedData<WalletTransferRequest>>;
 }
 
 const AccountBalanceSatifiedCheck = (account: Account, trxValue: number) => {
@@ -31,6 +33,10 @@ const AccountBalanceSatifiedCheck = (account: Account, trxValue: number) => {
 }
 
 class TransferServiceImpl implements TransferService {
+
+    async getUserInfows(userId: Number, page: Number): Promise<PagedData<WalletTransferRequest>> {
+        return await transferRequestRepoImpl.getUserInflowPayments(page, userId);
+    }
 
 
     async handleFulfillBankPayoutMessage(message: FulfillBankPayoutMessage): Promise<void> {

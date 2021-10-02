@@ -6,9 +6,27 @@ export interface AccountRepo{
     updateAccount(account: Account): Promise<Account>;
     createAccount(account: Partial<Account>): Promise<Account>;
     getUserAccount(walletId: String, userId: String): Promise<any>;
+    getUserWallets(userId: Number): Promise<Array<String>>;
 }
 
 export class AccountRepoImpl implements AccountRepo{
+
+    async getUserWallets(userId: Number): Promise<String[]> {
+        const walletsInfo = await accountModel.aggregate([
+            {
+                "$match":{
+                    userId
+                }
+            },
+            {
+                "$project": {
+                    walletId: true
+                }
+            }
+        ]);
+        return walletsInfo.map(walletInfo => walletInfo.walletId);
+    }
+
     async createAccount(account: Partial<Account>): Promise<Account> {
         return await new accountModel({...account}).save();
     }
